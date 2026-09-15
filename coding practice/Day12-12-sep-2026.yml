@@ -1,0 +1,125 @@
+#Day 12 — Scaling Applications and Automation
+# Ansible — Setup Auto-Scaling Group (ASG)
+
+- name: Setup Auto Scaling Group
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create Launch Configuration
+      ec2_asg:
+        name: Pathnex-asg
+        region: us-east-1
+        launch_config_name: pathnex-launch-config
+        min_size: 1
+        max_size: 3
+        desired_capacity: 2
+        vpc_zone_identifier: subnet-123456
+
+#Terraform - Create a Load Balancer with EC2 Instance
+resource "aws_lb" "pathnex_lb" {
+  name = "pathnex_lb"
+  internal  = false
+  load_balancer_type = "application"
+  security_groups = [aws_security_group.allow_ssh_http.id]
+  subnets = [aws_subnet.public.id]
+    }
+
+resource "aws_instance" "pathex_ec2" {
+  ami = "ami-0123abchd"
+  instance_type = "t2.micro"
+  securtiy_groups = [aws_security_group.allow_ssh_http.name]
+  tags = {
+    name = "pathnex_ec2"
+  }
+}
+
+#kubernetes - Horizontal Pod Autoscaler (HPA) with Load Balancer
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pathnex-web-app
+
+spec:
+  replica: 2
+  selector:
+    matchLables:
+      app: pathnex-web-app
+    template:
+      metadata:
+        labels:
+          app: pathnex-web-app
+    spec:
+      containers:
+        - name: pathnx-web-app
+          image: nginx
+          ports:
+            -   containers: 80
+
+-----
+apiVersion: autoscaling/v2
+kind: HorizontalPodscaler
+metadata:
+  name: pathnex-web-app-hpa
+spec:
+   scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: pathnex-web-app
+  minReplicas: 1
+  MaxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+  #Jenkinsfile - implement Parallel Stages
+  pipeline {
+    agent any
+    stages {
+      stage('Build & Test') {
+        Parallel {
+          stage('Build') {
+            steps {
+            echo 'Building project...'
+          }
+        }
+      stage ('Test') {
+        steps {
+          echo 'Running Tests..'
+        }
+        }
+      }
+      }
+    stages('Deploy') {
+      steps {
+        echo 'Deploying project...'
+      }
+    }
+    }
+  }
+
+
+#GitLab CI/CD - Parallel Jobs for Build & Test
+stages:
+  - build
+  - test
+  - deploy
+
+build:
+  stage: build
+  script:
+    - docker run pathnex-web-app npm test
+
+deploy:
+  stage: deploy
+script:
+  - kubectl applu -f kubernetes/deployment.yml
+
+#Docker
+#Docker Volumes
+FROM ubuntu
+VOLUME ["/opt/pathnex/data"]
+CMD ["sleep", "1000"]
+
+#Real Path
+"/opt/pathnex/data"
+
+#Bash command
+docker volume create pathnex-volume
