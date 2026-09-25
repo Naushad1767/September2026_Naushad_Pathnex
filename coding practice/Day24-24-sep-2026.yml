@@ -1,0 +1,90 @@
+# Day 24 — Advanced Terraform Modules and CI/CD Pipeline Scaling
+## Ansible — Deploy Docker Containers with Kubernetes Using Helm
+
+```yaml
+- name: Deploy Docker Container with Helm
+  hosts: localhost
+  tasks:
+    - name: Install Helm
+      command: curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+    - name: Deploy microservices with Helm 
+      command: helm install pathnex-app ./microservice-chart
+
+# Terraform - multi-Moudule Infrastructure with Outputs
+module "pathnex_vpc" {
+  source = "./vpc"
+  }
+
+module "pathnex_instance" {
+  source = "./instance"
+  vpc_id = module.pathnex_vpc.vpc_id
+}
+
+output "instance_id" {
+  value = module.pathnex_instance.instance_id
+}
+
+#Kubernetes - Helm-based Auto-Scaling Deployment
+apiVersion: apps/v1
+kind: Deployment 
+metadata:
+  name: pathnex-web-app
+spec:
+  replica: 3
+  selector:
+    matchlabels:
+      app: pathnex-web-app
+  template:
+    metadata:
+      labels:
+        app: pathnex-web-app
+    spec: 
+      conatiners:
+        - name: nginx
+          image: nginx
+          ports:
+            - containerPort: 80
+
+---
+
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoScaler
+metadata:
+  name: pathnex-web-app
+spec: 
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: deployment
+    name: pathnex-web-app
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+# Jenkinsfile - Scaling CI/CD Pipeline
+Pipeline {
+  agent any
+  stages {
+    stage('Scale up') {
+      steps {
+    stage('Scaling up Jenkins Pipeline agents for heavy workloads')
+    //Simulating scaling logic
+      }
+    }
+    stage('Build') {
+      steps {
+          echo 'Building project...'
+      }
+    }
+    stage('Deploy') {
+      steps {
+        echo 'Deploying project'
+      }
+    }
+  }
+}
+
+# Docker 
+# Healthcheck
+
+FROM nginx
+HEALTHCHECK CMD curl --fail https://localhost || exit 1
