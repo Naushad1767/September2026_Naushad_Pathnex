@@ -85,4 +85,4 @@ services:
     image: mysql:8
     container_name: pathnex-mysql
     environment:
-      MySQL_ROOT_PASSWORD: root
+      MySQL_ROOT_PASSWORD: root 
