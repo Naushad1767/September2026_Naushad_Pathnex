@@ -1,0 +1,92 @@
+# Day 05 — Handlers, User-Data, Resource Limits
+# Ansible — Handler to Restart Nginx
+
+- name: manage Nginx
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Update config file
+      copy:
+        src: index.html
+        dest: /usr/share/nginx/html/index.html
+        notify: Restart Nginx
+  
+  handlers:
+    - name: Restart Nginx 
+      service:
+        name: nginx 
+        state: restarted 
+
+
+# Terraform - EC2 with User Data (c6a.12xlarge)
+provider "aws" {
+  region = "us-east-1"
+} 
+
+resource "aws_instance" "PathnexEC2" {
+  ami = "ami-abcd123456789"
+  instance_type = "c6.12xlarge"
+
+user_data = <<EOF
+#!/bin/bash
+yum install -y httpd
+systemctl start httpd 
+EOF 
+
+tags = {
+  Name = "Pathnex-EC2""
+    }
+}
+
+# Kubernetes — Resource Limits
+apiVersion: v1
+kind: Pod 
+metadata: 
+  name: pathnex-limited-pod 
+spec:
+  containers:
+    - name: app
+    image: nginx 
+    resources:
+      limits:
+        memory: "256Mi"
+        cpu: "500m"
+
+# Day 05 - Environment Variable
+# Jenkins Pipeline - use Environment Variables
+
+Pipeline {
+  agent any
+  environment {
+    INSTITUTE_NAME = "Pathnex" 
+  }
+    stages {
+      stage('Print') {
+        steps {
+          sh 'Welcome to $INSTITUTE_NAME Devops Training'
+        }
+      }
+      stage('Build') {
+        steps {
+          sh 'mvn clean package - Dinstitute.name=$INSTITUTE_NAME Devops'
+        }
+      }
+    }
+}
+
+# GitLab CI — Use Environment Variables
+stages:
+  -  build 
+
+variables:
+   INSTITUTE_NAME: "Pathnex"
+
+build:
+  stage: build
+  image: maven:3.8.1-jdk-17
+  script:
+   - git clone https://github.com/pathnex/sample-java-app.git
+   - cd sample-java-app 
+   - echo "Welcome to $INSTITUTE_NAME Devops Training"
+   - mvn clean package -Dinstitute.name=$INSTITUTE_NAME
