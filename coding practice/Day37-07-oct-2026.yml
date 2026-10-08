@@ -1,0 +1,144 @@
+# Ansible Install nginx
+- name: Update apt package cache
+  hosts: all
+  become: yes
+  
+  tasks:
+    - name: Install Nginx
+      apt:
+        update_cache: yes
+
+    - name: Start and enable Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Start and enable Nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+# Terraform Create a Pathnex EC2 Instance
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+  }
+
+  required_version = ">= 1.5.0"
+}
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+resource "aws_instance" "pathnex" {
+  ami           = "ami-0f918f7e67a3323f0"
+  instance_type = "t3.micro"
+
+  tags = {
+    Name        = "Pathnex-Server"
+    Environment = "Dev"
+    Project     = "Pathnex"
+  }
+}
+
+output "pathnex_instance_id" {
+  value = aws_instance.pathnex.id
+}
+
+output "pathnex_public_ip" {
+  value = aws_instance.pathnex.public_ip
+}
+
+
+# Kubernetes Deployment with 2 Replicas
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: pathnex-nginx
+  labels:
+    app: pathnex-nginx
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: pathnex-nginx
+
+  template:
+    metadata:
+      labels:
+        app: pathnex-nginx
+
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:latest
+
+          ports:
+            - containerPort: 80
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+
+
+# Shell Print Date + Uptime
+#!/bin/bash
+echo "Current Date and Time:"
+date
+
+echo
+
+echo "System Uptime:"
+uptime
+
+# Parameterized Builds
+# Jenkins Pipeline — Parameterized
+pipeline {
+    agent any
+    parameters {
+        string(name: 'ENVIRONMENT', defaultValue: 'dev', description: 'Deployment Environment')
+    }
+    environment {
+        INSTITUTE_NAME = "Pathnex"
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'https://github.com/Pathnex/sample-java-app.git'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                sh 'echo "Deploying to $ENVIRONMENT by $INSTITUTE_NAME"'
+            }
+        }
+    }
+}
+
+
+# GitLab CI — Parameterized via Variables
+stages:
+  - deploy
+
+variables:
+  INSTITUTE_NAME: "Pathnex"
+  ENVIRONMENT: "dev"
+
+deploy:
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Deploying to $ENVIRONMENT by $INSTITUTE_NAME"
