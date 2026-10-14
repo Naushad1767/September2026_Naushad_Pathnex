@@ -1,0 +1,82 @@
+# Day 13 — DEBUG DAY
+# Ansible (Fixed File)
+
+- name: Broken
+  hosts: all
+
+ tasks:
+   - name: Install
+     yum:
+       name: nginx
+       state: present
+
+
+# Terraform (Fixed File)
+
+resource "aws_instance" "PathnexEC2" {
+  ami = "ami-0b6d9d3d33ba97d99"
+  instance_type = "c5.large"
+
+  tags = {
+    Name = "FiexedEC2"
+    }
+}
+
+# Kubernetes (Fixed File)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broken
+spec:
+ replicas: 2
+ selector:
+   matchLabels: 
+    app: fixed
+ template:
+  metadata:
+    labels:
+      app: fixed 
+  spec:
+    containers:
+     - name: app
+       image: nginx
+       ports:
+        - containerPort: 80
+
+# Matrix Builds
+# Jenkins Pipeline — Matrix Build
+pipeline {
+    agent any
+    environment {
+        INSTITUTE_NAME = "Pathnex"
+    }
+    matrix {
+      axes {
+        axis {
+          name 'JAVA_VERSION'
+          values '8', '11', '17'
+        }
+      }
+      stages {
+        stage('Build') {
+          steps {
+            sh "echo Building with JAVA $JAVA_VERSION"
+          }
+        }
+      }
+    }  
+}
+
+
+# GitLab CI — Matrix Jobs
+stages:
+  - build
+
+build:
+  stage: build
+  image: maven:3.8.1-jdk-17
+  parralel:
+    matrix:
+      - JAVA_VERSION: ['8', '11', '17']
+  script:
+    - echo "Building with Java $JAVA_VERSION"
