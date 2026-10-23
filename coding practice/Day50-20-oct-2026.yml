@@ -1,0 +1,86 @@
+# Day 20 — DEBUG DAY
+
+# Ansible - Broken Files fixed.
+
+- name: Install Ngnix
+  hosts: all
+  become: yes
+
+  tasks:
+  - name: Install Nginx on Ubuntu
+    apt:
+      name: nginx
+      state: present
+    when: ansible_os_family == "Debian"
+
+  - name: Install Nginx on RedHat
+    yum:
+      name: nginx
+      state: present
+    when: ansible_os_family == "RedHat"
+
+
+# Terraform - Broken Files fixed.
+resource aws_instance "PathnexEC2" {
+  ami = "ami-c7137319casgd12"
+  instance_type = "c6.large"
+}
+
+# Kubernetes — Broken Files fixed.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fixed-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: fixed-app
+  template:
+    metadata:
+      labels:
+        app: fixed-app
+    spec:
+      containers:
+        - name: app
+          image: nginx
+
+
+# Secrets & Credentials
+# Jenkins Pipeline — Using Credentials
+pipeline {
+  agent any
+  environmet {
+    INSTITUTE_NAME = "Pathnex"
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        git url: 'https://github.com/Pathnex/sample-java-app.git'
+      }
+    }
+    stage('Use Secret') {
+      steps {
+        withCredentials([string(credentialsId: 'PATHNEX_API_KEY', variable: 'API_KEY')]) {
+                    sh 'echo "Using secret $API_KEY for $INSTITUTE_NAME"'
+         }
+      }
+    }
+  }
+}
+
+
+# GitLab CI — Using CI/CD Variables
+stages:
+  - build
+
+variables:
+ INSTITUTE_NAME: "Pathnex"
+  API_KEY: "PLACEHOLDER_SECRET"
+
+build:
+  stage: build
+  image: alpine:latest
+  script:
+    - echo "using secret $API_KEY for INSTITUE_NAME"
