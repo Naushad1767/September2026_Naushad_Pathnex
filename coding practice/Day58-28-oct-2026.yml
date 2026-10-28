@@ -1,0 +1,71 @@
+# Day 28 — Debug Day
+# Ansible — Broken-Fixed
+
+- name: Install Nginx
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: fixed indentation
+      yum:
+        name: nginx
+        state: present
+
+
+# Terraform - fixed indentation
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fixedpod
+spec:
+  containers:
+    - name: nginx app
+      image: nginx
+
+
+# Rollback Strategies
+# Jenkins Pipeline — Automatic Rollback
+pipeline {
+  agent any
+
+  environment {
+    INSTITUTE_NAME = 'Pathnex'
+    TEAM = 'DevOps'
+    ENV = 'prod'
+  }
+
+  stages {
+    stage('Deploy') {
+      steps {
+        script {
+          try {
+            sh 'echo "Deploying $INSTITUTE_NAME app in $ENV for $TEAM"'
+            sh 'exit 1'
+          } catch (Exception e) {
+            echo "Deployment faild. Rolling back $INSTITUTE_NAME app in $ENV"
+            sh 'echo "Rollback completed."'
+          }
+        }
+      }
+    }
+  }
+}
+
+
+# GitLab CI — Rollback Strategy/ Fixed Configuration
+stages:
+  - deploy
+
+variables:
+  INSTITUTE_NAME: "Pathnex"
+  TEAM: "DevOps"
+  ENV: "prod"
+
+deploy
+  stage: deploy
+  image: alpine:latest
+  script:
+    - echo "Deployment $INSTITUTE_NAME app in $ENV for $TEAM"
+    - echo "Deployment completed successfully"
+  after_script:
+    - echo "Deployment job finished for $INSTITUTE_NAME in $ENV"
